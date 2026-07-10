@@ -125,7 +125,7 @@ public class CategoryService {
     }
 
     public GroupedByPriorityResponse getGroupedByPriority(Long memberId, String dateStr) {
-        if (memberId == null || dateStr == null || dateStr.isBlank()) {
+        if (memberId == null) {
             throw new CustomException(CategoryErrorCode.CATEGORY_INVALID_INPUT);
         }
 
