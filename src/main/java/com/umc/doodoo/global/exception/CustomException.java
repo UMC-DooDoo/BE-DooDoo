@@ -1,5 +1,6 @@
 package com.umc.doodoo.global.exception;
 
+import com.umc.doodoo.global.code.BaseErrorCode;
 import lombok.Getter;
 
 @Getter

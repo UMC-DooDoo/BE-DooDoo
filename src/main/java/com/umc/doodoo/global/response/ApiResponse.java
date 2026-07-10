@@ -2,7 +2,9 @@ package com.umc.doodoo.global.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.umc.doodoo.global.exception.BaseErrorCode;
+import com.umc.doodoo.global.code.BaseErrorCode;
+import com.umc.doodoo.global.code.BaseSuccessCode;
+import com.umc.doodoo.global.code.GeneralSuccessCode;
 
 @JsonPropertyOrder({"isSuccess", "code", "message", "result"})
 public class ApiResponse<T> {
