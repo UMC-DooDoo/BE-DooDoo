@@ -6,9 +6,11 @@ import com.umc.doodoo.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 @Slf4j
 @RestControllerAdvice
@@ -29,6 +31,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
+        return ResponseEntity.status(GeneralErrorCode.BAD_REQUEST.getHttpStatus())
+                .body(ApiResponse.onFailure(GeneralErrorCode.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        return ResponseEntity.status(GeneralErrorCode.BAD_REQUEST.getHttpStatus())
+                .body(ApiResponse.onFailure(GeneralErrorCode.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHandlerMethodValidation(HandlerMethodValidationException e) {
         return ResponseEntity.status(GeneralErrorCode.BAD_REQUEST.getHttpStatus())
                 .body(ApiResponse.onFailure(GeneralErrorCode.BAD_REQUEST));
     }

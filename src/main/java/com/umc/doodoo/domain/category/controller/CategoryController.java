@@ -11,8 +11,11 @@ import com.umc.doodoo.domain.category.service.CategoryService;
 import com.umc.doodoo.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/categories")
 @RequiredArgsConstructor
+@Validated
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -35,7 +39,7 @@ public class CategoryController {
     @PostMapping
     public ApiResponse<CategoryCreateResponse> createCategory(
             @AuthenticationPrincipal Long memberId,
-            @RequestBody CategoryCreateRequest request
+            @RequestBody @Valid CategoryCreateRequest request
     ) {
         return ApiResponse.onSuccess(categoryService.createCategory(memberId, request));
     }
@@ -70,7 +74,7 @@ public class CategoryController {
     @GetMapping("/todos/grouped-by-category")
     public ApiResponse<GroupedByCategoryResponse> getGroupedByCategory(
             @AuthenticationPrincipal Long memberId,
-            @RequestParam(required = false) String date
+            @RequestParam @NotBlank String date
     ) {
         return ApiResponse.onSuccess(categoryService.getGroupedByCategory(memberId, date));
     }
@@ -79,7 +83,7 @@ public class CategoryController {
     @GetMapping("/todos/grouped-by-priority")
     public ApiResponse<GroupedByPriorityResponse> getGroupedByPriority(
             @AuthenticationPrincipal Long memberId,
-            @RequestParam(required = false) String date
+            @RequestParam @NotBlank String date
     ) {
         return ApiResponse.onSuccess(categoryService.getGroupedByPriority(memberId, date));
     }
