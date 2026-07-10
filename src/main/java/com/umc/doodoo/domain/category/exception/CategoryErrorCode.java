@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 public enum CategoryErrorCode implements BaseErrorCode {
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY404", "존재하지 않는 분야입니다."),
-    CATEGORY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "CATEGORY400", "분야 입력값을 다시 확인해 주세요.");
+    CATEGORY_INVALID_INPUT(HttpStatus.BAD_REQUEST, "CATEGORY400", "분야 입력값을 다시 확인해 주세요."),
+    CATEGORY_IN_USE(HttpStatus.CONFLICT, "CATEGORY409", "Todo가 연결된 분야는 삭제할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
