@@ -119,10 +119,6 @@ public class TodoService {
     }
 
     public CalendarResponse getCalendar(Long userId, Integer year, Integer month) {
-        if (year == null || month == null) {
-            throw new CustomException(TodoErrorCode.CALENDAR_INVALID_INPUT);
-        }
-
         YearMonth yearMonth = toYearMonth(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
