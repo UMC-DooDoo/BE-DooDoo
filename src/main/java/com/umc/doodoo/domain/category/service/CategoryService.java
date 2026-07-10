@@ -93,6 +93,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long memberId, Long categoryId) {
         Category category = findCategoryOrThrow(memberId, categoryId);
+        todoRepository.deleteByCategoryId(categoryId);
         categoryRepository.delete(category);
     }
 

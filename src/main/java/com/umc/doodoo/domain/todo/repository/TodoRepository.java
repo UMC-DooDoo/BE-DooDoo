@@ -14,4 +14,6 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     List<Todo> findByMemberIdAndTaskDate(Long memberId, LocalDate taskDate);
 
     List<Todo> findByMemberIdAndTaskDateBetween(Long memberId, LocalDate startDate, LocalDate endDate);
+
+    void deleteByCategoryId(Long categoryId);
 }
