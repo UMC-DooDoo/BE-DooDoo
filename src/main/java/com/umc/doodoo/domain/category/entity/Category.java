@@ -46,10 +46,6 @@ public class Category extends BaseEntity {
         this.color = color;
     }
 
-    public Long getMemberId() {
-        return member.getId();
-    }
-
     public void updateCategoryName(String categoryName) {
         this.categoryName = categoryName;
     }

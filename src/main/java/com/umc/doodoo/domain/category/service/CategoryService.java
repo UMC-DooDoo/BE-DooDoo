@@ -66,7 +66,7 @@ public class CategoryService {
                 .map(CategoryListItemResponse::from)
                 .toList();
 
-        return new CategoryListResponse(memberId, items.size(), items);
+        return new CategoryListResponse(items.size(), items);
     }
 
     @Transactional
