@@ -1,24 +1,27 @@
 package com.umc.doodoo.domain.todo.dto.request;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.NonNull;
 
 import java.time.LocalDate;
 
 public record TodoCreateRequest(
-        @NonNull
-        @Size(min = 1)
+        @NotNull
         Long categoryId,
 
         @NotBlank
+        @Size(max = 30)
         String title,
 
-        @NotBlank
+        @NotNull
         LocalDate taskDate,
 
-        @NonNull
-        @Size(min = 1, max = 4)
+        @NotNull
+        @Min(1)
+        @Max(4)
         Integer priority
 ) {
 }

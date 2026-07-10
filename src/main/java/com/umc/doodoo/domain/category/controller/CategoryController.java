@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,7 +52,7 @@ public class CategoryController {
     @PatchMapping("/{categoryId}")
     public ApiResponse<CategoryUpdateResponse> updateCategory(
             @PathVariable Long categoryId,
-            @RequestBody @Valid CategoryUpdateRequest request
+            @RequestBody CategoryUpdateRequest request
     ) {
         return ApiResponse.onSuccess(categoryService.updateCategory(categoryId, request));
     }
