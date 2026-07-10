@@ -2,35 +2,53 @@ package com.umc.doodoo.global.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.umc.doodoo.global.exception.ErrorCode;
-import lombok.Getter;
+import com.umc.doodoo.global.exception.BaseErrorCode;
 
-@Getter
 @JsonPropertyOrder({"isSuccess", "code", "message", "result"})
 public class ApiResponse<T> {
 
-    @JsonProperty("isSuccess")
-    private final boolean isSuccess;
+    private final boolean success;
     private final String code;
     private final String message;
     private final T result;
 
-    private ApiResponse(boolean isSuccess, String code, String message, T result) {
-        this.isSuccess = isSuccess;
+    private ApiResponse(boolean success, String code, String message, T result) {
+        this.success = success;
         this.code = code;
         this.message = message;
         this.result = result;
     }
 
+    @JsonProperty("isSuccess")
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public T getResult() {
+        return result;
+    }
+
     public static <T> ApiResponse<T> onSuccess(T result) {
-        return new ApiResponse<>(true, "COMMON200", "요청에 성공했습니다.", result);
+        return new ApiResponse<>(true, GeneralSuccessCode.OK.getCode(), GeneralSuccessCode.OK.getMessage(), result);
+    }
+
+    public static <T> ApiResponse<T> onSuccess(BaseSuccessCode successCode, T result) {
+        return new ApiResponse<>(true, successCode.getCode(), successCode.getMessage(), result);
     }
 
     public static <T> ApiResponse<T> onSuccess(String message, T result) {
-        return new ApiResponse<>(true, "COMMON200", message, result);
+        return new ApiResponse<>(true, GeneralSuccessCode.OK.getCode(), message, result);
     }
 
-    public static <T> ApiResponse<T> onFailure(ErrorCode errorCode) {
+    public static <T> ApiResponse<T> onFailure(BaseErrorCode errorCode) {
         return new ApiResponse<>(false, errorCode.getCode(), errorCode.getMessage(), null);
     }
 }

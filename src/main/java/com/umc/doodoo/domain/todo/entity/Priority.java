@@ -1,7 +1,7 @@
 package com.umc.doodoo.domain.todo.entity;
 
+import com.umc.doodoo.domain.todo.exception.TodoErrorCode;
 import com.umc.doodoo.global.exception.CustomException;
-import com.umc.doodoo.global.exception.ErrorCode;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -24,6 +24,6 @@ public enum Priority {
         return Arrays.stream(values())
                 .filter(priority -> priority.value == value)
                 .findFirst()
-                .orElseThrow(() -> new CustomException(ErrorCode.TODO_INVALID_INPUT));
+                .orElseThrow(() -> new CustomException(TodoErrorCode.TODO_INVALID_INPUT));
     }
 }

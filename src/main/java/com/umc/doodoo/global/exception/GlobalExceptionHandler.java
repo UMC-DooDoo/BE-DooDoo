@@ -13,21 +13,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException e) {
-        ErrorCode errorCode = e.getErrorCode();
+        BaseErrorCode errorCode = e.getErrorCode();
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(ApiResponse.onFailure(errorCode));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
-        return ResponseEntity.status(ErrorCode.COMMON400.getHttpStatus())
-                .body(ApiResponse.onFailure(ErrorCode.COMMON400));
+        return ResponseEntity.status(GeneralErrorCode.BAD_REQUEST.getHttpStatus())
+                .body(ApiResponse.onFailure(GeneralErrorCode.BAD_REQUEST));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("Unhandled exception", e);
-        return ResponseEntity.status(ErrorCode.COMMON500.getHttpStatus())
-                .body(ApiResponse.onFailure(ErrorCode.COMMON500));
+        return ResponseEntity.status(GeneralErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(ApiResponse.onFailure(GeneralErrorCode.INTERNAL_SERVER_ERROR));
     }
 }
