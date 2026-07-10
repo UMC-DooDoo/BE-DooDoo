@@ -1,5 +1,7 @@
 package com.umc.doodoo.global.exception;
 
+import com.umc.doodoo.global.code.BaseErrorCode;
+import com.umc.doodoo.global.code.GeneralErrorCode;
 import com.umc.doodoo.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;

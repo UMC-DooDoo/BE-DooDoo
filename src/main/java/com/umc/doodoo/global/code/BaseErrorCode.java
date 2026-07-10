@@ -1,4 +1,4 @@
-package com.umc.doodoo.global.exception;
+package com.umc.doodoo.global.code;
 
 import org.springframework.http.HttpStatus;
 
