@@ -1,6 +1,6 @@
 package com.umc.doodoo.domain.category.exception;
 
-import com.umc.doodoo.global.exception.BaseErrorCode;
+import com.umc.doodoo.global.code.BaseErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
