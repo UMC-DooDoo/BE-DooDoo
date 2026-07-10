@@ -16,6 +16,8 @@ import com.umc.doodoo.domain.category.entity.Category;
 import com.umc.doodoo.domain.category.entity.Color;
 import com.umc.doodoo.domain.category.exception.CategoryErrorCode;
 import com.umc.doodoo.domain.category.repository.CategoryRepository;
+import com.umc.doodoo.domain.member.entity.Member;
+import com.umc.doodoo.domain.member.repository.MemberRepository;
 import com.umc.doodoo.domain.todo.entity.Todo;
 import com.umc.doodoo.domain.todo.repository.TodoRepository;
 import com.umc.doodoo.global.exception.CustomException;
@@ -37,19 +39,21 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final TodoRepository todoRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
-    public CategoryCreateResponse createCategory(CategoryCreateRequest request) {
-        if (request.memberId() == null || request.categoryName() == null
+    public CategoryCreateResponse createCategory(Long memberId, CategoryCreateRequest request) {
+        if (request.categoryName() == null
                 || request.categoryName().isBlank() || request.categoryName().length() > 30
                 || request.color() == null) {
             throw new CustomException(CategoryErrorCode.CATEGORY_INVALID_INPUT);
         }
 
         Color color = Color.fromValue(request.color());
+        Member member = memberRepository.getReferenceById(memberId);
 
         Category category = Category.builder()
-                .memberId(request.memberId())
+                .member(member)
                 .categoryName(request.categoryName())
                 .color(color)
                 .build();
@@ -58,20 +62,16 @@ public class CategoryService {
     }
 
     public CategoryListResponse getCategories(Long memberId) {
-        if (memberId == null) {
-            throw new CustomException(CategoryErrorCode.CATEGORY_INVALID_INPUT);
-        }
-
         List<CategoryListItemResponse> items = categoryRepository.findByMemberId(memberId).stream()
                 .map(CategoryListItemResponse::from)
                 .toList();
 
-        return new CategoryListResponse(memberId, items.size(), items);
+        return new CategoryListResponse(items.size(), items);
     }
 
     @Transactional
-    public CategoryUpdateResponse updateCategory(Long categoryId, CategoryUpdateRequest request) {
-        Category category = findCategoryOrThrow(categoryId);
+    public CategoryUpdateResponse updateCategory(Long memberId, Long categoryId, CategoryUpdateRequest request) {
+        Category category = findCategoryOrThrow(memberId, categoryId);
 
         if (request.categoryName() == null && request.color() == null) {
             throw new CustomException(CategoryErrorCode.CATEGORY_INVALID_INPUT);
@@ -91,8 +91,8 @@ public class CategoryService {
     }
 
     @Transactional
-    public void deleteCategory(Long categoryId) {
-        Category category = findCategoryOrThrow(categoryId);
+    public void deleteCategory(Long memberId, Long categoryId) {
+        Category category = findCategoryOrThrow(memberId, categoryId);
         if (todoRepository.existsByCategoryId(categoryId)) {
             throw new CustomException(CategoryErrorCode.CATEGORY_IN_USE);
         }
@@ -100,7 +100,7 @@ public class CategoryService {
     }
 
     public GroupedByCategoryResponse getGroupedByCategory(Long memberId, String dateStr) {
-        if (memberId == null || dateStr == null || dateStr.isBlank()) {
+        if (dateStr == null || dateStr.isBlank()) {
             throw new CustomException(CategoryErrorCode.CATEGORY_INVALID_INPUT);
         }
 
@@ -128,7 +128,7 @@ public class CategoryService {
     }
 
     public GroupedByPriorityResponse getGroupedByPriority(Long memberId, String dateStr) {
-        if (memberId == null) {
+        if (dateStr == null || dateStr.isBlank()) {
             throw new CustomException(CategoryErrorCode.CATEGORY_INVALID_INPUT);
         }
 
@@ -163,8 +163,8 @@ public class CategoryService {
         return new GroupedByPriorityResponse(date, priorities);
     }
 
-    private Category findCategoryOrThrow(Long categoryId) {
-        return categoryRepository.findById(categoryId)
+    private Category findCategoryOrThrow(Long memberId, Long categoryId) {
+        return categoryRepository.findByIdAndMemberId(categoryId, memberId)
                 .orElseThrow(() -> new CustomException(CategoryErrorCode.CATEGORY_NOT_FOUND));
     }
 

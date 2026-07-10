@@ -3,6 +3,7 @@ package com.umc.doodoo.domain.category.service;
 import com.umc.doodoo.domain.category.entity.Category;
 import com.umc.doodoo.domain.category.exception.CategoryErrorCode;
 import com.umc.doodoo.domain.category.repository.CategoryRepository;
+import com.umc.doodoo.domain.member.repository.MemberRepository;
 import com.umc.doodoo.domain.todo.repository.TodoRepository;
 import com.umc.doodoo.global.exception.CustomException;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,22 +30,26 @@ class CategoryServiceTest {
     private TodoRepository todoRepository;
 
     @Mock
+    private MemberRepository memberRepository;
+
+    @Mock
     private Category category;
 
     private CategoryService categoryService;
 
     @BeforeEach
     void setUp() {
-        categoryService = new CategoryService(categoryRepository, todoRepository);
+        categoryService = new CategoryService(categoryRepository, todoRepository, memberRepository);
     }
 
     @Test
     void deleteCategoryRejectsCategoryReferencedByTodo() {
+        Long memberId = 1L;
         Long categoryId = 2L;
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(categoryRepository.findByIdAndMemberId(categoryId, memberId)).thenReturn(Optional.of(category));
         when(todoRepository.existsByCategoryId(categoryId)).thenReturn(true);
 
-        assertThatThrownBy(() -> categoryService.deleteCategory(categoryId))
+        assertThatThrownBy(() -> categoryService.deleteCategory(memberId, categoryId))
                 .isInstanceOfSatisfying(CustomException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(CategoryErrorCode.CATEGORY_IN_USE));
 

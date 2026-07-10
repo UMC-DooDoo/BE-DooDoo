@@ -1,12 +1,16 @@
 package com.umc.doodoo.domain.category.entity;
 
+import com.umc.doodoo.domain.member.entity.Member;
 import com.umc.doodoo.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,8 +28,9 @@ public class Category extends BaseEntity {
     @Column(name = "category_id")
     private Long id;
 
-    @Column(name = "member_id", nullable = false)
-    private Long memberId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     @Column(name = "category_name", length = 30, nullable = false)
     private String categoryName;
@@ -35,8 +40,8 @@ public class Category extends BaseEntity {
     private Color color;
 
     @Builder
-    public Category(Long memberId, String categoryName, Color color) {
-        this.memberId = memberId;
+    public Category(Member member, String categoryName, Color color) {
+        this.member = member;
         this.categoryName = categoryName;
         this.color = color;
     }

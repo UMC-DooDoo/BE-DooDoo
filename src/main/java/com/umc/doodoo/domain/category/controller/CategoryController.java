@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,38 +37,43 @@ public class CategoryController {
 
     @Operation(summary = "분야 생성", description = "새로운 분야를 생성합니다.")
     @PostMapping
-    public ApiResponse<CategoryCreateResponse> createCategory(@RequestBody @Valid CategoryCreateRequest request) {
-        return ApiResponse.onSuccess(categoryService.createCategory(request));
+    public ApiResponse<CategoryCreateResponse> createCategory(
+            @AuthenticationPrincipal Long memberId,
+            @RequestBody @Valid CategoryCreateRequest request
+    ) {
+        return ApiResponse.onSuccess(categoryService.createCategory(memberId, request));
     }
 
-    @Operation(summary = "분야 목록 조회", description = "특정 멤버의 분야 목록을 조회합니다.")
+    @Operation(summary = "분야 목록 조회", description = "내 분야 목록을 조회합니다.")
     @GetMapping
-    public ApiResponse<CategoryListResponse> getCategories(
-            @RequestParam Long memberId
-    ) {
+    public ApiResponse<CategoryListResponse> getCategories(@AuthenticationPrincipal Long memberId) {
         return ApiResponse.onSuccess(categoryService.getCategories(memberId));
     }
 
     @Operation(summary = "분야 수정", description = "분야의 이름 또는 색상을 부분 수정합니다.")
     @PatchMapping("/{categoryId}")
     public ApiResponse<CategoryUpdateResponse> updateCategory(
+            @AuthenticationPrincipal Long memberId,
             @PathVariable Long categoryId,
             @RequestBody CategoryUpdateRequest request
     ) {
-        return ApiResponse.onSuccess(categoryService.updateCategory(categoryId, request));
+        return ApiResponse.onSuccess(categoryService.updateCategory(memberId, categoryId, request));
     }
 
-    @Operation(summary = "분야 삭제", description = "분야를 삭제합니다.")
+    @Operation(summary = "분야 삭제", description = "분야를 삭제합니다. 해당 분야에 속한 할일이 있으면 삭제할 수 없습니다.")
     @DeleteMapping("/{categoryId}")
-    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId) {
-        categoryService.deleteCategory(categoryId);
+    public ApiResponse<Void> deleteCategory(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long categoryId
+    ) {
+        categoryService.deleteCategory(memberId, categoryId);
         return ApiResponse.onSuccess("분야가 삭제되었습니다.", null);
     }
 
     @Operation(summary = "분야별 할일 그룹 조회", description = "특정 날짜의 할일을 분야별로 그룹핑하여 조회합니다.")
     @GetMapping("/todos/grouped-by-category")
     public ApiResponse<GroupedByCategoryResponse> getGroupedByCategory(
-            @RequestParam Long memberId,
+            @AuthenticationPrincipal Long memberId,
             @RequestParam @NotBlank String date
     ) {
         return ApiResponse.onSuccess(categoryService.getGroupedByCategory(memberId, date));
@@ -76,7 +82,7 @@ public class CategoryController {
     @Operation(summary = "우선순위별 할일 그룹 조회", description = "특정 날짜의 할일을 우선순위별로 그룹핑하여 조회합니다.")
     @GetMapping("/todos/grouped-by-priority")
     public ApiResponse<GroupedByPriorityResponse> getGroupedByPriority(
-            @RequestParam Long memberId,
+            @AuthenticationPrincipal Long memberId,
             @RequestParam @NotBlank String date
     ) {
         return ApiResponse.onSuccess(categoryService.getGroupedByPriority(memberId, date));
