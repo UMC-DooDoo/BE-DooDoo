@@ -1,0 +1,166 @@
+package com.umc.doodoo.domain.todo.service;
+
+import com.umc.doodoo.domain.todo.dto.request.TodoCreateRequest;
+import com.umc.doodoo.domain.todo.dto.request.TodoUpdateRequest;
+import com.umc.doodoo.domain.todo.dto.response.CalendarDayResponse;
+import com.umc.doodoo.domain.todo.dto.response.CalendarResponse;
+import com.umc.doodoo.domain.todo.dto.response.TodoCompleteResponse;
+import com.umc.doodoo.domain.todo.dto.response.TodoCreateResponse;
+import com.umc.doodoo.domain.todo.dto.response.TodoListItemResponse;
+import com.umc.doodoo.domain.todo.dto.response.TodoListResponse;
+import com.umc.doodoo.domain.todo.dto.response.TodoUpdateResponse;
+import com.umc.doodoo.domain.todo.entity.Priority;
+import com.umc.doodoo.domain.todo.entity.Todo;
+import com.umc.doodoo.domain.todo.repository.TodoRepository;
+import com.umc.doodoo.global.exception.CustomException;
+import com.umc.doodoo.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class TodoService {
+
+    private final TodoRepository todoRepository;
+
+    @Transactional
+    public TodoCreateResponse createTodo(TodoCreateRequest request) {
+        if (request.userId() == null || request.categoryId() == null
+                || request.taskDate() == null || request.priority() == null
+                || request.title() == null || request.title().isBlank()
+                || request.title().length() > 30) {
+            throw new CustomException(ErrorCode.TODO_INVALID_INPUT);
+        }
+
+        Priority priority = Priority.fromValue(request.priority());
+
+        Todo todo = Todo.builder()
+                .userId(request.userId())
+                .categoryId(request.categoryId())
+                .title(request.title())
+                .taskDate(request.taskDate())
+                .priority(priority)
+                .build();
+
+        return TodoCreateResponse.from(todoRepository.save(todo));
+    }
+
+    public TodoListResponse getTodosByDate(Long userId, String dateStr) {
+        if (userId == null || dateStr == null || dateStr.isBlank()) {
+            throw new CustomException(ErrorCode.TODO_INVALID_INPUT);
+        }
+
+        LocalDate date = parseDate(dateStr);
+        List<Todo> todos = todoRepository.findByUserIdAndTaskDate(userId, date);
+
+        List<TodoListItemResponse> items = todos.stream()
+                .map(TodoListItemResponse::from)
+                .toList();
+
+        long completedCount = todos.stream().filter(Todo::isCompleted).count();
+
+        return new TodoListResponse(date, todos.size(), (int) completedCount, items);
+    }
+
+    @Transactional
+    public TodoUpdateResponse updateTodo(Long todoId, TodoUpdateRequest request) {
+        Todo todo = findTodoOrThrow(todoId);
+
+        if (request.title() == null && request.categoryId() == null
+                && request.taskDate() == null && request.priority() == null) {
+            throw new CustomException(ErrorCode.TODO_INVALID_INPUT);
+        }
+
+        if (request.title() != null) {
+            if (request.title().isBlank() || request.title().length() > 30) {
+                throw new CustomException(ErrorCode.TODO_INVALID_INPUT);
+            }
+            todo.updateTitle(request.title());
+        }
+        if (request.categoryId() != null) {
+            todo.updateCategoryId(request.categoryId());
+        }
+        if (request.taskDate() != null) {
+            todo.updateTaskDate(request.taskDate());
+        }
+        if (request.priority() != null) {
+            todo.updatePriority(Priority.fromValue(request.priority()));
+        }
+
+        return TodoUpdateResponse.from(todo);
+    }
+
+    @Transactional
+    public TodoCompleteResponse toggleComplete(Long todoId) {
+        Todo todo = findTodoOrThrow(todoId);
+        todo.toggleComplete();
+        return new TodoCompleteResponse(todo.getId(), todo.isCompleted());
+    }
+
+    @Transactional
+    public void deleteTodo(Long todoId) {
+        Todo todo = findTodoOrThrow(todoId);
+        todoRepository.delete(todo);
+    }
+
+    public CalendarResponse getCalendar(Long userId, String monthStr) {
+        if (userId == null || monthStr == null || monthStr.isBlank()) {
+            throw new CustomException(ErrorCode.CALENDAR_INVALID_INPUT);
+        }
+
+        YearMonth yearMonth = parseMonth(monthStr);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        List<Todo> todos = todoRepository.findByUserIdAndTaskDateBetween(userId, startDate, endDate);
+
+        Map<LocalDate, List<Todo>> todosByDate = todos.stream()
+                .collect(Collectors.groupingBy(Todo::getTaskDate, LinkedHashMap::new, Collectors.toList()));
+
+        List<CalendarDayResponse> days = todosByDate.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    List<Integer> priorities = entry.getValue().stream()
+                            .map(Todo::getPriority)
+                            .distinct()
+                            .map(Priority::getValue)
+                            .toList();
+                    boolean allCompleted = entry.getValue().stream().allMatch(Todo::isCompleted);
+                    return new CalendarDayResponse(entry.getKey(), priorities, allCompleted);
+                })
+                .toList();
+
+        return new CalendarResponse(monthStr, days);
+    }
+
+    private Todo findTodoOrThrow(Long todoId) {
+        return todoRepository.findById(todoId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TODO_NOT_FOUND));
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        try {
+            return LocalDate.parse(dateStr);
+        } catch (DateTimeParseException e) {
+            throw new CustomException(ErrorCode.TODO_INVALID_INPUT);
+        }
+    }
+
+    private YearMonth parseMonth(String monthStr) {
+        try {
+            return YearMonth.parse(monthStr);
+        } catch (DateTimeParseException e) {
+            throw new CustomException(ErrorCode.CALENDAR_INVALID_INPUT);
+        }
+    }
+}
