@@ -3,6 +3,7 @@ package com.umc.doodoo.domain.statistics.service;
 import com.umc.doodoo.domain.category.entity.Category;
 import com.umc.doodoo.domain.category.entity.Color;
 import com.umc.doodoo.domain.category.repository.CategoryRepository;
+import com.umc.doodoo.domain.member.entity.Member;
 import com.umc.doodoo.domain.statistics.dto.response.CategoryStatisticsResponse;
 import com.umc.doodoo.domain.statistics.dto.response.DailyStatisticsResponse;
 import com.umc.doodoo.domain.statistics.dto.response.PriorityStatisticsResponse;
@@ -36,6 +37,9 @@ class StatisticsServiceTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private Member member;
+
     private StatisticsService statisticsService;
 
     @BeforeEach
@@ -45,7 +49,7 @@ class StatisticsServiceTest {
 
     @Test
     void summaryCountsTodosAndReturnsBanner() {
-        when(todoRepository.findByUserIdAndTaskDateBetween(
+        when(todoRepository.findByMemberIdAndTaskDateBetween(
                 USER_ID, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
                 .thenReturn(List.of(
                         todo(10L, LocalDate.of(2026, 4, 5), Priority.FIRST, true),
@@ -75,7 +79,7 @@ class StatisticsServiceTest {
 
     @Test
     void dailyStatisticsOnlyContainsDatesWithTodosAndIsSorted() {
-        when(todoRepository.findByUserIdAndTaskDateBetween(
+        when(todoRepository.findByMemberIdAndTaskDateBetween(
                 USER_ID, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
                 .thenReturn(List.of(
                         todo(10L, LocalDate.of(2026, 4, 10), Priority.FIRST, true),
@@ -99,7 +103,7 @@ class StatisticsServiceTest {
         when(category.getCategoryName()).thenReturn("공부");
         when(category.getColor()).thenReturn(Color.GREEN);
         when(categoryRepository.findByMemberId(USER_ID)).thenReturn(List.of(category));
-        when(todoRepository.findByUserIdAndTaskDateBetween(
+        when(todoRepository.findByMemberIdAndTaskDateBetween(
                 USER_ID, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
                 .thenReturn(List.of(
                         todo(10L, LocalDate.of(2026, 4, 5), Priority.FIRST, true),
@@ -117,20 +121,20 @@ class StatisticsServiceTest {
     }
 
     @Test
-    void missingCategoryIsNotSilentlyExcluded() {
+    void missingCategoryIsExcludedWithoutFailingStatistics() {
         when(categoryRepository.findByMemberId(USER_ID)).thenReturn(List.of());
-        when(todoRepository.findByUserIdAndTaskDateBetween(
+        when(todoRepository.findByMemberIdAndTaskDateBetween(
                 USER_ID, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
                 .thenReturn(List.of(todo(999L, LocalDate.of(2026, 4, 5), Priority.FIRST, true)));
 
-        assertThatThrownBy(() -> statisticsService.getCategoryStatistics(USER_ID, 2026, 4))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("categoryId=999");
+        CategoryStatisticsResponse response = statisticsService.getCategoryStatistics(USER_ID, 2026, 4);
+
+        assertThat(response.categoryStatistics()).isEmpty();
     }
 
     @Test
     void priorityStatisticsAlwaysReturnsAllFourPriorities() {
-        when(todoRepository.findByUserIdAndTaskDateBetween(
+        when(todoRepository.findByMemberIdAndTaskDateBetween(
                 USER_ID, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
                 .thenReturn(List.of(todo(10L, LocalDate.of(2026, 4, 5), Priority.FIRST, true)));
 
@@ -161,14 +165,14 @@ class StatisticsServiceTest {
     }
 
     private void mockEmptyMonth() {
-        when(todoRepository.findByUserIdAndTaskDateBetween(
+        when(todoRepository.findByMemberIdAndTaskDateBetween(
                 USER_ID, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
                 .thenReturn(List.of());
     }
 
     private Todo todo(Long categoryId, LocalDate date, Priority priority, boolean completed) {
         Todo todo = Todo.builder()
-                .userId(USER_ID)
+                .member(member)
                 .categoryId(categoryId)
                 .title("할 일")
                 .taskDate(date)

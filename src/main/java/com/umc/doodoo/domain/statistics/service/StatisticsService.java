@@ -9,6 +9,7 @@ import com.umc.doodoo.domain.todo.entity.Todo;
 import com.umc.doodoo.domain.todo.repository.TodoRepository;
 import com.umc.doodoo.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class StatisticsService {
 
     private final TodoRepository todoRepository;
@@ -65,7 +67,8 @@ public class StatisticsService {
 
         List<CategoryStatisticItemResponse> items = todosByCategory.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .map(entry -> createCategoryStatistic(categoriesById, entry.getKey(), entry.getValue()))
+                .filter(entry -> hasCategory(categoriesById, entry.getKey(), userId))
+                .map(entry -> createCategoryStatistic(categoriesById.get(entry.getKey()), entry.getValue()))
                 .toList();
         return new CategoryStatisticsResponse(year, month, items);
     }
@@ -86,12 +89,16 @@ public class StatisticsService {
         return new PriorityStatisticsResponse(year, month, items);
     }
 
-    private CategoryStatisticItemResponse createCategoryStatistic(
-            Map<Long, Category> categoriesById, Long categoryId, List<Todo> todos) {
-        Category category = categoriesById.get(categoryId);
-        if (category == null) {
-            throw new IllegalStateException("Todo의 Category를 찾을 수 없습니다. categoryId=" + categoryId);
+    private boolean hasCategory(Map<Long, Category> categoriesById, Long categoryId, Long userId) {
+        if (categoriesById.containsKey(categoryId)) {
+            return true;
         }
+        log.warn("분야별 통계에서 소유 카테고리를 찾을 수 없는 Todo를 제외합니다. userId={}, categoryId={}",
+                userId, categoryId);
+        return false;
+    }
+
+    private CategoryStatisticItemResponse createCategoryStatistic(Category category, List<Todo> todos) {
         int completed = (int) todos.stream().filter(Todo::isCompleted).count();
         return new CategoryStatisticItemResponse(category.getId(), category.getCategoryName(),
                 category.getColor().getValue(), completed, todos.size(),
@@ -99,7 +106,7 @@ public class StatisticsService {
     }
 
     private List<Todo> findMonthlyTodos(Long userId, YearMonth period) {
-        return todoRepository.findByUserIdAndTaskDateBetween(userId, period.atDay(1), period.atEndOfMonth());
+        return todoRepository.findByMemberIdAndTaskDateBetween(userId, period.atDay(1), period.atEndOfMonth());
     }
 
     private YearMonth validatePeriod(Integer year, Integer month) {

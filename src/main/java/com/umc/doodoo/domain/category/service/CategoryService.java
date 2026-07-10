@@ -93,6 +93,9 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long categoryId) {
         Category category = findCategoryOrThrow(categoryId);
+        if (todoRepository.existsByCategoryId(categoryId)) {
+            throw new CustomException(CategoryErrorCode.CATEGORY_IN_USE);
+        }
         categoryRepository.delete(category);
     }
 

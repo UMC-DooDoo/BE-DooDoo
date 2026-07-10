@@ -1,5 +1,6 @@
 package com.umc.doodoo.domain.todo.service;
 
+import com.umc.doodoo.domain.category.repository.CategoryRepository;
 import com.umc.doodoo.domain.member.entity.Member;
 import com.umc.doodoo.domain.member.repository.MemberRepository;
 import com.umc.doodoo.domain.todo.dto.request.TodoCreateRequest;
@@ -36,6 +37,7 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
     private final MemberRepository memberRepository;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public TodoCreateResponse createTodo(Long userId, TodoCreateRequest request) {
@@ -47,6 +49,7 @@ public class TodoService {
         }
 
         Priority priority = Priority.fromValue(request.priority());
+        validateCategoryOwnership(userId, request.categoryId());
         Member member = memberRepository.getReferenceById(userId);
 
         Todo todo = Todo.builder()
@@ -93,6 +96,7 @@ public class TodoService {
             todo.updateTitle(request.title());
         }
         if (request.categoryId() != null) {
+            validateCategoryOwnership(userId, request.categoryId());
             todo.updateCategoryId(request.categoryId());
         }
         if (request.taskDate() != null) {
@@ -147,6 +151,12 @@ public class TodoService {
     private Todo findTodoOrThrow(Long userId, Long todoId) {
         return todoRepository.findByIdAndMemberId(todoId, userId)
                 .orElseThrow(() -> new CustomException(TodoErrorCode.TODO_NOT_FOUND));
+    }
+
+    private void validateCategoryOwnership(Long userId, Long categoryId) {
+        if (!categoryRepository.existsByIdAndMemberId(categoryId, userId)) {
+            throw new CustomException(TodoErrorCode.TODO_INVALID_INPUT);
+        }
     }
 
     private LocalDate parseDate(String dateStr) {
