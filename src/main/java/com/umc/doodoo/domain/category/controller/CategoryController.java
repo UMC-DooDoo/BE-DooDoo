@@ -60,7 +60,7 @@ public class CategoryController {
         return ApiResponse.onSuccess(categoryService.updateCategory(memberId, categoryId, request));
     }
 
-    @Operation(summary = "분야 삭제", description = "분야를 삭제합니다. 해당 분야에 속한 할일도 함께 삭제됩니다.")
+    @Operation(summary = "분야 삭제", description = "분야를 삭제합니다. 해당 분야에 속한 할일이 있으면 삭제할 수 없습니다.")
     @DeleteMapping("/{categoryId}")
     public ApiResponse<Void> deleteCategory(
             @AuthenticationPrincipal Long memberId,
