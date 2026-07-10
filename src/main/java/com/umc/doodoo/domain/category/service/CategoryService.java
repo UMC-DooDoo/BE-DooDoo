@@ -106,7 +106,7 @@ public class CategoryService {
         Map<Long, Category> categoryMap = categoryRepository.findByMemberId(memberId).stream()
                 .collect(Collectors.toMap(Category::getId, c -> c));
 
-        List<Todo> todos = todoRepository.findByUserIdAndTaskDate(memberId, date);
+        List<Todo> todos = todoRepository.findByMemberIdAndTaskDate(memberId, date);
 
         Map<Long, List<Todo>> todosByCategoryId = todos.stream()
                 .collect(Collectors.groupingBy(Todo::getCategoryId, LinkedHashMap::new, Collectors.toList()));
@@ -131,7 +131,7 @@ public class CategoryService {
 
         LocalDate date = parseDate(dateStr);
 
-        List<Todo> todos = todoRepository.findByUserIdAndTaskDate(memberId, date);
+        List<Todo> todos = todoRepository.findByMemberIdAndTaskDate(memberId, date);
 
         List<Long> categoryIds = todos.stream()
                 .map(Todo::getCategoryId)
