@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/calendar")
 @RequiredArgsConstructor
+@Validated
 public class CalendarController {
 
     private final TodoService todoService;
@@ -24,8 +26,9 @@ public class CalendarController {
     @GetMapping
     public ApiResponse<CalendarResponse> getCalendar(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) String month
+            @RequestParam Integer year,
+            @RequestParam Integer month
     ) {
-        return ApiResponse.onSuccess(todoService.getCalendar(userId, month));
+        return ApiResponse.onSuccess(todoService.getCalendar(userId, year, month));
     }
 }
