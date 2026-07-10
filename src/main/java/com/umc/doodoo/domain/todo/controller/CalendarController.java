@@ -20,12 +20,13 @@ public class CalendarController {
 
     private final TodoService todoService;
 
-    @Operation(summary = "월별 캘린더 요약 조회", description = "인증된 사용자의 지정한 월 날짜별 우선순위 목록 및 완료 여부 요약을 조회합니다.")
+    @Operation(summary = "월별 캘린더 요약 조회", description = "인증된 사용자의 지정한 연도/월 날짜별 우선순위 목록 및 완료 여부 요약을 조회합니다.")
     @GetMapping
     public ApiResponse<CalendarResponse> getCalendar(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) String month
+            @RequestParam Integer year,
+            @RequestParam Integer month
     ) {
-        return ApiResponse.onSuccess(todoService.getCalendar(userId, month));
+        return ApiResponse.onSuccess(todoService.getCalendar(userId, year, month));
     }
 }
