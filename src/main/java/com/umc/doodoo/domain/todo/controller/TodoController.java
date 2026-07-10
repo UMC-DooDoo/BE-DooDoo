@@ -57,7 +57,7 @@ public class TodoController {
     public ApiResponse<TodoUpdateResponse> updateTodo(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long todoId,
-            @RequestBody @Valid TodoUpdateRequest request
+            @RequestBody TodoUpdateRequest request
     ) {
         return ApiResponse.onSuccess(todoService.updateTodo(userId, todoId, request));
     }

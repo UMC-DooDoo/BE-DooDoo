@@ -1,10 +1,10 @@
 package com.umc.doodoo.domain.category.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.NonNull;
+import jakarta.validation.constraints.NotNull;
 
 public record CategoryCreateRequest(
-        @NonNull
+        @NotNull
         Long memberId,
 
         @NotBlank
