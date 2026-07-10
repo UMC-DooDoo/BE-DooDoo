@@ -34,8 +34,8 @@ public class TodoService {
     private final TodoRepository todoRepository;
 
     @Transactional
-    public TodoCreateResponse createTodo(TodoCreateRequest request) {
-        if (request.userId() == null || request.categoryId() == null
+    public TodoCreateResponse createTodo(Long userId, TodoCreateRequest request) {
+        if (request.categoryId() == null
                 || request.taskDate() == null || request.priority() == null
                 || request.title() == null || request.title().isBlank()
                 || request.title().length() > 30) {
@@ -45,7 +45,7 @@ public class TodoService {
         Priority priority = Priority.fromValue(request.priority());
 
         Todo todo = Todo.builder()
-                .userId(request.userId())
+                .userId(userId)
                 .categoryId(request.categoryId())
                 .title(request.title())
                 .taskDate(request.taskDate())
@@ -56,7 +56,7 @@ public class TodoService {
     }
 
     public TodoListResponse getTodosByDate(Long userId, String dateStr) {
-        if (userId == null || dateStr == null || dateStr.isBlank()) {
+        if (dateStr == null || dateStr.isBlank()) {
             throw new CustomException(TodoErrorCode.TODO_INVALID_INPUT);
         }
 
@@ -73,8 +73,8 @@ public class TodoService {
     }
 
     @Transactional
-    public TodoUpdateResponse updateTodo(Long todoId, TodoUpdateRequest request) {
-        Todo todo = findTodoOrThrow(todoId);
+    public TodoUpdateResponse updateTodo(Long userId, Long todoId, TodoUpdateRequest request) {
+        Todo todo = findTodoOrThrow(userId, todoId);
 
         if (request.title() == null && request.categoryId() == null
                 && request.taskDate() == null && request.priority() == null) {
@@ -101,20 +101,20 @@ public class TodoService {
     }
 
     @Transactional
-    public TodoCompleteResponse toggleComplete(Long todoId) {
-        Todo todo = findTodoOrThrow(todoId);
+    public TodoCompleteResponse toggleComplete(Long userId, Long todoId) {
+        Todo todo = findTodoOrThrow(userId, todoId);
         todo.toggleComplete();
         return new TodoCompleteResponse(todo.getId(), todo.isCompleted());
     }
 
     @Transactional
-    public void deleteTodo(Long todoId) {
-        Todo todo = findTodoOrThrow(todoId);
+    public void deleteTodo(Long userId, Long todoId) {
+        Todo todo = findTodoOrThrow(userId, todoId);
         todoRepository.delete(todo);
     }
 
     public CalendarResponse getCalendar(Long userId, String monthStr) {
-        if (userId == null || monthStr == null || monthStr.isBlank()) {
+        if (monthStr == null || monthStr.isBlank()) {
             throw new CustomException(TodoErrorCode.CALENDAR_INVALID_INPUT);
         }
 
@@ -143,8 +143,8 @@ public class TodoService {
         return new CalendarResponse(monthStr, days);
     }
 
-    private Todo findTodoOrThrow(Long todoId) {
-        return todoRepository.findById(todoId)
+    private Todo findTodoOrThrow(Long userId, Long todoId) {
+        return todoRepository.findByIdAndUserId(todoId, userId)
                 .orElseThrow(() -> new CustomException(TodoErrorCode.TODO_NOT_FOUND));
     }
 
