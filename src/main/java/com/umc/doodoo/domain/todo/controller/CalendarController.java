@@ -24,7 +24,7 @@ public class CalendarController {
     @GetMapping
     public ApiResponse<CalendarResponse> getCalendar(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) String month
+            @RequestParam String month
     ) {
         return ApiResponse.onSuccess(todoService.getCalendar(userId, month));
     }

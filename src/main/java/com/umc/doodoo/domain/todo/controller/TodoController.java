@@ -10,6 +10,7 @@ import com.umc.doodoo.domain.todo.service.TodoService;
 import com.umc.doodoo.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +35,7 @@ public class TodoController {
     @PostMapping
     public ApiResponse<TodoCreateResponse> createTodo(
             @AuthenticationPrincipal Long userId,
-            @RequestBody TodoCreateRequest request
+            @RequestBody @Valid TodoCreateRequest request
     ) {
         return ApiResponse.onSuccess(todoService.createTodo(userId, request));
     }
@@ -43,7 +44,7 @@ public class TodoController {
     @GetMapping
     public ApiResponse<TodoListResponse> getTodos(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) String date
+            @RequestParam String date
     ) {
         return ApiResponse.onSuccess(todoService.getTodosByDate(userId, date));
     }
@@ -53,7 +54,7 @@ public class TodoController {
     public ApiResponse<TodoUpdateResponse> updateTodo(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long todoId,
-            @RequestBody TodoUpdateRequest request
+            @RequestBody @Valid TodoUpdateRequest request
     ) {
         return ApiResponse.onSuccess(todoService.updateTodo(userId, todoId, request));
     }
