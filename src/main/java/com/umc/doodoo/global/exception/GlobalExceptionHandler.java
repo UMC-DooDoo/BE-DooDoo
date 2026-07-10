@@ -6,6 +6,7 @@ import com.umc.doodoo.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -22,6 +23,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        return ResponseEntity.status(GeneralErrorCode.BAD_REQUEST.getHttpStatus())
+                .body(ApiResponse.onFailure(GeneralErrorCode.BAD_REQUEST));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
         return ResponseEntity.status(GeneralErrorCode.BAD_REQUEST.getHttpStatus())
                 .body(ApiResponse.onFailure(GeneralErrorCode.BAD_REQUEST));
     }

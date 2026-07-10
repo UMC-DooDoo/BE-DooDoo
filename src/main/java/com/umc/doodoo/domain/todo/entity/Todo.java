@@ -1,12 +1,16 @@
 package com.umc.doodoo.domain.todo.entity;
 
+import com.umc.doodoo.domain.member.entity.Member;
 import com.umc.doodoo.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,8 +30,9 @@ public class Todo extends BaseEntity {
     @Column(name = "todo_id")
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Member member;
 
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
@@ -46,13 +51,17 @@ public class Todo extends BaseEntity {
     private boolean completed;
 
     @Builder
-    public Todo(Long userId, Long categoryId, String title, LocalDate taskDate, Priority priority) {
-        this.userId = userId;
+    public Todo(Member member, Long categoryId, String title, LocalDate taskDate, Priority priority) {
+        this.member = member;
         this.categoryId = categoryId;
         this.title = title;
         this.taskDate = taskDate;
         this.priority = priority;
         this.completed = false;
+    }
+
+    public Long getUserId() {
+        return member.getId();
     }
 
     public void updateTitle(String title) {

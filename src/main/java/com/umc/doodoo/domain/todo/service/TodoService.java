@@ -1,5 +1,7 @@
 package com.umc.doodoo.domain.todo.service;
 
+import com.umc.doodoo.domain.member.entity.Member;
+import com.umc.doodoo.domain.member.repository.MemberRepository;
 import com.umc.doodoo.domain.todo.dto.request.TodoCreateRequest;
 import com.umc.doodoo.domain.todo.dto.request.TodoUpdateRequest;
 import com.umc.doodoo.domain.todo.dto.response.CalendarDayResponse;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -32,10 +35,11 @@ import java.util.stream.Collectors;
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
-    public TodoCreateResponse createTodo(TodoCreateRequest request) {
-        if (request.userId() == null || request.categoryId() == null
+    public TodoCreateResponse createTodo(Long userId, TodoCreateRequest request) {
+        if (request.categoryId() == null
                 || request.taskDate() == null || request.priority() == null
                 || request.title() == null || request.title().isBlank()
                 || request.title().length() > 30) {
@@ -43,9 +47,10 @@ public class TodoService {
         }
 
         Priority priority = Priority.fromValue(request.priority());
+        Member member = memberRepository.getReferenceById(userId);
 
         Todo todo = Todo.builder()
-                .userId(request.userId())
+                .member(member)
                 .categoryId(request.categoryId())
                 .title(request.title())
                 .taskDate(request.taskDate())
@@ -56,12 +61,12 @@ public class TodoService {
     }
 
     public TodoListResponse getTodosByDate(Long userId, String dateStr) {
-        if (userId == null || dateStr == null || dateStr.isBlank()) {
+        if (dateStr == null || dateStr.isBlank()) {
             throw new CustomException(TodoErrorCode.TODO_INVALID_INPUT);
         }
 
         LocalDate date = parseDate(dateStr);
-        List<Todo> todos = todoRepository.findByUserIdAndTaskDate(userId, date);
+        List<Todo> todos = todoRepository.findByMemberIdAndTaskDate(userId, date);
 
         List<TodoListItemResponse> items = todos.stream()
                 .map(TodoListItemResponse::from)
@@ -73,8 +78,8 @@ public class TodoService {
     }
 
     @Transactional
-    public TodoUpdateResponse updateTodo(Long todoId, TodoUpdateRequest request) {
-        Todo todo = findTodoOrThrow(todoId);
+    public TodoUpdateResponse updateTodo(Long userId, Long todoId, TodoUpdateRequest request) {
+        Todo todo = findTodoOrThrow(userId, todoId);
 
         if (request.title() == null && request.categoryId() == null
                 && request.taskDate() == null && request.priority() == null) {
@@ -101,28 +106,24 @@ public class TodoService {
     }
 
     @Transactional
-    public TodoCompleteResponse toggleComplete(Long todoId) {
-        Todo todo = findTodoOrThrow(todoId);
+    public TodoCompleteResponse toggleComplete(Long userId, Long todoId) {
+        Todo todo = findTodoOrThrow(userId, todoId);
         todo.toggleComplete();
         return new TodoCompleteResponse(todo.getId(), todo.isCompleted());
     }
 
     @Transactional
-    public void deleteTodo(Long todoId) {
-        Todo todo = findTodoOrThrow(todoId);
+    public void deleteTodo(Long userId, Long todoId) {
+        Todo todo = findTodoOrThrow(userId, todoId);
         todoRepository.delete(todo);
     }
 
-    public CalendarResponse getCalendar(Long userId, String monthStr) {
-        if (userId == null || monthStr == null || monthStr.isBlank()) {
-            throw new CustomException(TodoErrorCode.CALENDAR_INVALID_INPUT);
-        }
-
-        YearMonth yearMonth = parseMonth(monthStr);
+    public CalendarResponse getCalendar(Long userId, Integer year, Integer month) {
+        YearMonth yearMonth = toYearMonth(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        List<Todo> todos = todoRepository.findByUserIdAndTaskDateBetween(userId, startDate, endDate);
+        List<Todo> todos = todoRepository.findByMemberIdAndTaskDateBetween(userId, startDate, endDate);
 
         Map<LocalDate, List<Todo>> todosByDate = todos.stream()
                 .collect(Collectors.groupingBy(Todo::getTaskDate, LinkedHashMap::new, Collectors.toList()));
@@ -140,11 +141,11 @@ public class TodoService {
                 })
                 .toList();
 
-        return new CalendarResponse(monthStr, days);
+        return new CalendarResponse(yearMonth.toString(), days);
     }
 
-    private Todo findTodoOrThrow(Long todoId) {
-        return todoRepository.findById(todoId)
+    private Todo findTodoOrThrow(Long userId, Long todoId) {
+        return todoRepository.findByIdAndMemberId(todoId, userId)
                 .orElseThrow(() -> new CustomException(TodoErrorCode.TODO_NOT_FOUND));
     }
 
@@ -156,10 +157,10 @@ public class TodoService {
         }
     }
 
-    private YearMonth parseMonth(String monthStr) {
+    private YearMonth toYearMonth(int year, int month) {
         try {
-            return YearMonth.parse(monthStr);
-        } catch (DateTimeParseException e) {
+            return YearMonth.of(year, month);
+        } catch (DateTimeException e) {
             throw new CustomException(TodoErrorCode.CALENDAR_INVALID_INPUT);
         }
     }

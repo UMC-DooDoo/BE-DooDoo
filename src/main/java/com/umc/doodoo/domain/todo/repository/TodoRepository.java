@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TodoRepository extends JpaRepository<Todo, Long> {
 
-    List<Todo> findByUserIdAndTaskDate(Long userId, LocalDate taskDate);
+    Optional<Todo> findByIdAndMemberId(Long id, Long memberId);
 
-    List<Todo> findByUserIdAndTaskDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    List<Todo> findByMemberIdAndTaskDate(Long memberId, LocalDate taskDate);
+
+    List<Todo> findByMemberIdAndTaskDateBetween(Long memberId, LocalDate startDate, LocalDate endDate);
 }
